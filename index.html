@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>🧪 유치원 신기한 약국 놀이 🧪</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Jua', sans-serif;
+      background-color: #F0FDF4;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      overflow: hidden; 
+    }
+    .btn-press:active {
+      transform: scale(0.95);
+    }
+    .flash-bg {
+      animation: flash 0.8s ease-in-out 3;
+    }
+    @keyframes flash {
+      0%, 100% { background-color: #F0FDF4; }
+      50% { background-color: #FEF08A; }
+    }
+    ::-webkit-scrollbar { display: none; }
+    
+    .selected-card {
+      border-color: #10B981 !important;
+      background-color: #ECFDF5 !important;
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+      transform: scale(1.02);
+    }
+    
+    /* 물약 흔들림 애니메이션 */
+    @keyframes liquid-wiggle {
+      0%, 100% { transform: translateY(0) skewX(0); }
+      50% { transform: translateY(-2px) skewX(2deg); }
+    }
+    .liquid-anim {
+      animation: liquid-wiggle 3s ease-in-out infinite;
+    }
+
+    /* 커스텀 슬라이더 스타일 */
+    .slider-hue {
+      background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    }
+    .slider-light {
+      background: linear-gradient(to right, #000000 0%, #ffffff 100%);
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 24px;
+      border-radius: 12px;
+      outline: none;
+      border: 3px stroke #475569;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 4px solid #475569;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body class="text-gray-800 h-[100dvh] w-screen overflow-hidden bg-[#F0FDF4] p-0 m-0 flex justify-center items-center">
+
+  <div id="app-container" class="w-full h-[100dvh] relative overflow-hidden flex flex-col p-0 m-0">
+    
+    <!-- 1. 시작 메뉴 화면 -->
+    <div id="view-menu" class="absolute inset-0 flex flex-col items-center justify-center bg-[#E6F4EA] z-50 p-6">
+      <h1 class="text-5xl sm:text-7xl md:text-8xl text-emerald-600 mb-6 text-center drop-shadow-md font-black whitespace-nowrap">🧪 신기한 물약 약국 🧪</h1>
+      <p class="text-xl sm:text-2xl md:text-3xl text-emerald-500 mb-10 sm:mb-14 font-bold whitespace-nowrap">역할을 골라주세요!</p>
+      <div class="flex flex-col sm:flex-row gap-6 sm:gap-10 w-full max-w-4xl justify-center px-6">
+        <button onclick="startApp('customer')" class="btn-press flex-1 bg-emerald-400 hover:bg-emerald-500 text-white text-3xl sm:text-4xl md:text-5xl py-10 sm:py-16 px-8 rounded-[2.5rem] shadow-2xl border-b-8 border-emerald-600 flex flex-col items-center justify-center gap-4 sm:gap-6 transition-all">
+          <span class="text-7xl sm:text-8xl md:text-9xl">👧👦</span>
+          <span class="font-bold tracking-wide whitespace-nowrap">아픈 환자하기</span>
+        </button>
+        <button onclick="startApp('owner')" class="btn-press flex-1 bg-blue-400 hover:bg-blue-500 text-white text-3xl sm:text-4xl md:text-5xl py-10 sm:py-16 px-8 rounded-[2.5rem] shadow-2xl border-b-8 border-blue-600 flex flex-col items-center justify-center gap-4 sm:gap-6 transition-all">
+          <span class="text-7xl sm:text-8xl md:text-9xl">💊</span>
+          <span class="font-bold tracking-wide whitespace-nowrap">멋진 약사하기</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. 환자용 화면 -->
+    <div id="view-customer" class="hidden absolute inset-0 flex flex-col bg-emerald-50 z-40 h-[100dvh]">
+      <!-- 상단 헤더 (텍스트 겹침 절대 방지 그리드 구조) -->
+      <div class="bg-emerald-500 text-white py-4 px-6 shadow-md grid grid-cols-3 items-center shrink-0">
+        <div class="text-left">
+          <button onclick="goHome()" class="text-lg sm:text-2xl md:text-3xl bg-emerald-600 py-2 px-5 rounded-2xl btn-press whitespace-nowrap">🏠 처음으로</button>
+        </div>
+        <div class="text-center font-bold text-xl sm:text-3xl md:text-4xl whitespace-nowrap">
+          🏥 신기한 물감 물약 약국
+        </div>
+        <div class="text-right"></div>
+      </div>
+      
+      <!-- 선택 탭 -->
+      <div class="bg-emerald-100 flex p-2 gap-2 shrink-0 border-b border-emerald-200">
+        <button onclick="switchTab('symptom')" id="tab-symptom" class="flex-1 py-3 sm:py-4 text-2xl sm:text-3xl font-black rounded-2xl transition-all bg-white text-emerald-700 shadow-sm border border-emerald-200">
+          🤕 아픈 곳 말하기
+        </button>
+        <button onclick="switchTab('color')" id="tab-color" class="flex-1 py-3 sm:py-4 text-2xl sm:text-3xl font-black rounded-2xl transition-all bg-transparent text-emerald-600 hover:bg-white/50">
+          🧪 예쁜 물약 고르기
+        </button>
+      </div>
+
+      <!-- 선택 아이템 리스트 (가로형 리스트로 바깥 삐침 완전 통제) -->
+      <div id="selection-grid" class="flex-1 p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 h-full min-h-0 overflow-y-auto">
+        <!-- JS 렌더링 영역 -->
+      </div>
+
+      <!-- 하단 주문바 -->
+      <div class="bg-white py-3 sm:py-5 px-6 sm:px-12 shadow-[0_-6px_20px_rgba(0,0,0,0.15)] shrink-0 flex justify-between items-center rounded-t-[1.5rem] sm:rounded-t-[2.5rem] border-t-4 sm:border-t-8 border-emerald-200 font-bold mb-0 pb-safe">
+        <div class="text-xl sm:text-3xl md:text-4xl text-emerald-600 whitespace-nowrap flex items-center gap-3">
+          <span>내가 고른 것:</span> 
+          <span id="selected-text" class="text-2xl sm:text-4xl md:text-5xl text-emerald-500 font-extrabold">아직 없어요</span>
+        </div>
+        <button id="btn-order" onclick="submitOrder()" class="btn-press bg-emerald-500 text-white text-xl sm:text-3xl md:text-4xl font-bold py-3 sm:py-5 px-6 sm:px-12 rounded-xl sm:rounded-2xl shadow-xl border-b-4 sm:border-b-8 border-emerald-700 opacity-50 cursor-not-allowed transition-all flex items-center gap-3 whitespace-nowrap">
+          <span>약사님! 처방해 주세요</span> <span>🚀</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. 사장님용(약사용) 화면 -->
+    <div id="view-owner" class="hidden absolute inset-0 flex flex-col bg-blue-50 z-30 h-[100dvh]">
+      <!-- 상단 헤더 (겹침 원천 방지 그리드) -->
+      <div class="bg-blue-400 text-white py-4 px-6 shadow-md grid grid-cols-3 items-center shrink-0">
+        <div class="text-left">
+          <button onclick="goHome()" class="text-lg sm:text-2xl md:text-3xl bg-blue-500 py-2.5 px-5 rounded-2xl btn-press whitespace-nowrap">🏠 처음으로</button>
+        </div>
+        <div class="text-center font-bold text-xl sm:text-3xl md:text-4xl whitespace-nowrap">
+          💊 신기한 약국 약사님 화면
+        </div>
+        <div class="text-right font-bold text-lg sm:text-2xl md:text-3xl whitespace-nowrap flex justify-end">
+          <span class="bg-blue-600 py-1.5 px-4 rounded-xl">대기 환자: <span id="order-count-badge">0</span>명</span>
+        </div>
+      </div>
+
+      <!-- 환자 주문 대기 내역 리스트 -->
+      <div id="order-list" class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-4 sm:gap-5">
+        <div id="empty-orders" class="h-full flex flex-col items-center justify-center text-gray-400 text-3xl sm:text-4xl gap-4 sm:gap-6 my-auto font-bold">
+          <span class="text-7xl sm:text-8xl">💤</span>
+          <span class="text-gray-500 text-2xl sm:text-3xl whitespace-nowrap">기다리는 환자가 없어요!</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 요술 물약 커스텀 조절판 (색조/명도 인앱 슬라이더 팝업) -->
+    <div id="color-picker-modal" class="hidden absolute inset-0 bg-black bg-opacity-50 z-[200] flex justify-center items-center p-4">
+      <div class="bg-white p-8 rounded-[3rem] shadow-2xl flex flex-col items-center gap-6 max-w-lg w-full text-center border-8 border-emerald-400">
+        <h2 class="text-3xl sm:text-4xl font-black text-emerald-700 whitespace-nowrap">🎨 요술 물약 만들기</h2>
+        
+        <!-- 실시간 색깔 반영되는 미리보기 물약통 -->
+        <div id="modal-preview-bottle" class="w-40 h-40 flex items-center justify-center">
+          <!-- JS에서 동적 렌더링함 -->
+        </div>
+
+        <div class="w-full flex flex-col gap-5 text-left font-bold text-xl">
+          <!-- 색조 조절판 -->
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-gray-700">🌈 색조 (알록달록 색깔)</span>
+              <span id="label-hue" class="text-emerald-600">360</span>
+            </div>
+            <input type="range" id="input-hue" min="0" max="360" value="360" oninput="updateModalColor()" class="w-full slider-hue">
+          </div>
+
+          <!-- 명도 조절판 -->
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-gray-700">☀️ 명도 (밝고 어두운 정도)</span>
+              <span id="label-light" class="text-emerald-600">100%</span>
+            </div>
+            <input type="range" id="input-light" min="20" max="100" value="100" oninput="updateModalColor()" class="w-full slider-light">
+          </div>
+        </div>
+
+        <button onclick="confirmCustomColor()" class="btn-press bg-emerald-500 text-white text-2xl sm:text-3xl font-bold py-4 px-10 rounded-2xl border-b-8 border-emerald-700 w-full mt-2">
+          이 색깔로 물약 결정! 👍
+        </button>
+      </div>
+    </div>
+
+    <!-- 주문 완료 토스트 피드백 -->
+    <div id="toast-message" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white px-10 sm:px-16 py-6 sm:py-8 rounded-[2rem] text-3xl sm:text-4xl md:text-5xl shadow-2xl z-[100] font-bold pointer-events-none transition-all duration-300 flex flex-col items-center gap-3 sm:gap-4">
+      <span class="text-6xl sm:text-7xl">🎉</span>
+      <span class="text-center whitespace-nowrap">약사님께 처방전이 전달되었어요!</span>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyABH9wBsCqGmbPwREIQEtRO2WWnduwcUgk",
+      authDomain: "water-67c64.firebaseapp.com",
+      projectId: "water-67c64",
+      storageBucket: "water-67c64.firebasestorage.app",
+      messagingSenderId: "380112819050",
+      appId: "1:380112819050:web:b94529f8239541655d4b13",
+      measurementId: "G-80CPJR1V59",
+      databaseURL: "https://water-67c64-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const DB_ORDERS_PATH = "kindergarten_pharmacy_orders";
+
+    // --- 수제 벡터 일러스트 라이브러리 ---
+    const illustrations = {
+      head: `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <circle cx="50" cy="55" r="32" fill="#FFEDD5" stroke="#FDBA74" stroke-width="4"/>
+          <!-- 이마 붕대 -->
+          <rect x="22" y="24" width="56" height="18" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="3"/>
+          <line x1="34" y1="24" x2="34" y2="42" stroke="#E2E8F0" stroke-width="2"/>
+          <line x1="66" y1="24" x2="66" y2="42" stroke="#E2E8F0" stroke-width="2"/>
+          <!-- 아픈 표정 -->
+          <path d="M 38 52 L 44 54 M 62 52 L 56 54" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 40 68 Q 50 63 60 68" fill="none" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="28" cy="60" r="5" fill="#F87171" opacity="0.6"/>
+          <circle cx="72" cy="60" r="5" fill="#F87171" opacity="0.6"/>
+        </svg>
+      `,
+      eye: `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <!-- 그렁그렁한 큰 눈망울 -->
+          <path d="M 12 50 Q 50 15 88 50 Q 50 85 12 50 Z" fill="#FFFFFF" stroke="#3B82F6" stroke-width="5"/>
+          <circle cx="50" cy="50" r="22" fill="#2563EB"/>
+          <!-- 촉촉한 반짝임 효과 -->
+          <circle cx="44" cy="42" r="7" fill="#FFFFFF"/>
+          <circle cx="58" cy="56" r="4" fill="#FFFFFF"/>
+          <!-- 주르륵 내리는 눈물방울 -->
+          <path d="M 50 70 Q 55 86 50 94 Q 45 86 50 70 Z" fill="#60A5FA" stroke="#2563EB" stroke-width="2"/>
+          <path d="M 18 20 L 32 30 M 82 20 L 68 30" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      `,
+      nose: `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <circle cx="50" cy="50" r="32" fill="#FFEDD5" stroke="#FDBA74" stroke-width="4"/>
+          <circle cx="36" cy="42" r="4" fill="#475569"/>
+          <circle cx="64" cy="42" r="4" fill="#475569"/>
+          <!-- 루돌프 딸기코 -->
+          <circle cx="50" cy="53" r="14" fill="#EF4444" stroke="#B91C1C" stroke-width="3"/>
+          <!-- 흐르는 콧물방울 -->
+          <path d="M 44 65 C 36 82 48 94 54 84 C 58 78 54 65 44 65 Z" fill="#93C5FD" opacity="0.9" stroke="#3B82F6" stroke-width="2"/>
+        </svg>
+      `,
+      cough: `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <circle cx="50" cy="50" r="32" fill="#FFEDD5" stroke="#FDBA74" stroke-width="4"/>
+          <path d="M 32 36 Q 36 32 40 36 M 68 36 Q 64 32 60 36" stroke="#475569" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <!-- 마스크 쓴 모습 -->
+          <rect x="26" y="46" width="48" height="26" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="3"/>
+          <line x1="12" y1="52" x2="26" y2="56" stroke="#E2E8F0" stroke-width="3" stroke-linecap="round"/>
+          <line x1="88" y1="52" x2="74" y2="56" stroke="#E2E8F0" stroke-width="3" stroke-linecap="round"/>
+          <line x1="36" y1="54" x2="64" y2="54" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+          <line x1="36" y1="64" x2="64" y2="64" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      `,
+      fever: `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <!-- 열나서 빨개진 얼굴 -->
+          <circle cx="50" cy="50" r="32" fill="#FECACA" stroke="#EF4444" stroke-width="4"/>
+          <path d="M 32 42 L 40 44 M 68 42 L 60 44" stroke="#475569" stroke-width="3" stroke-linecap="round"/>
+          <!-- 송골송골 땀방울 -->
+          <circle cx="28" cy="52" r="3" fill="#3B82F6"/>
+          <circle cx="72" cy="52" r="3" fill="#3B82F6"/>
+          <!-- 체온계 앙 물고 있는 모습 -->
+          <rect x="42" y="55" width="28" height="10" rx="3" fill="#FFFFFF" stroke="#475569" stroke-width="2" transform="rotate(-15 45 60)"/>
+          <rect x="64" y="55" width="6" height="10" fill="#EF4444" transform="rotate(-15 45 60)"/>
+        </svg>
+      `,
+      leg: `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <!-- 깁스하고 붕대 감은 통통한 다리 -->
+          <path d="M 25 15 L 45 15 L 45 55 L 75 55 L 75 85 L 25 85 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="5" stroke-linejoin="round"/>
+          <!-- 빼꼼 나온 발가락 -->
+          <path d="M 75 70 Q 86 70 86 77 Q 86 85 75 85 Z" fill="#FFEDD5" stroke="#FDBA74" stroke-width="3"/>
+          <circle cx="80" cy="74" r="2" fill="#FDBA74"/>
+          <!-- 붕대 무늬 줄선 -->
+          <line x1="28" y1="30" x2="42" y2="30" stroke="#CBD5E1" stroke-width="3"/>
+          <line x1="28" y1="42" x2="42" y2="42" stroke="#CBD5E1" stroke-width="3"/>
+          <!-- 빨간 아픔 번개 번쩍 -->
+          <path d="M 68 30 L 78 20 M 78 40 L 90 44" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      `,
+      arm: `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <!-- 삼각건 붕대를 하고 깁스를 한 귀여운 팔 -->
+          <path d="M 15 50 C 15 30 50 30 50 50 L 50 80 C 50 88 40 88 30 80 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M 50 50 C 50 35 85 35 85 50 L 85 70" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- 목 삼각건 끈끈이 -->
+          <path d="M 30 15 L 50 50 L 70 15 Z" fill="#F3F4F6" stroke="#94A3B8" stroke-width="3"/>
+          <!-- 아픔 번개 -->
+          <path d="M 82 25 L 94 15 M 82 38 L 94 42" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      `,
+      stomach: `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <!-- 아파서 배꼽에 번개치는 배 -->
+          <rect x="20" y="20" width="60" height="60" rx="18" fill="#FFEDD5" stroke="#FDBA74" stroke-width="4"/>
+          <circle cx="50" cy="65" r="4" fill="#F59E0B"/>
+          <!-- 아픈 배 회오리선 -->
+          <path d="M 32 45 Q 50 32 68 45" fill="none" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 32 53 Q 50 40 68 53" fill="none" stroke="#EF4444" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      `,
+
+      // 물약통 디자인 템플릿 (항상 일정한 형태를 유지하여 극도의 완성도 보장)
+      potion: (liquidColor) => `
+        <svg viewBox="0 0 100 100" class="w-full h-full">
+          <!-- 뚜껑 부분 -->
+          <rect x="38" y="10" width="24" height="12" rx="4" fill="#E2E8F0" stroke="#475569" stroke-width="4" />
+          <!-- 목 부분 -->
+          <path d="M 43 22 L 57 22 L 62 36 L 38 36 Z" fill="#F8FAFC" stroke="#475569" stroke-width="4" stroke-linejoin="round"/>
+          <!-- 물약 몸통 -->
+          <path d="M 38 36 C 18 42 18 85 35 90 L 65 90 C 82 85 82 42 62 36 Z" fill="#FFFFFF" stroke="#475569" stroke-width="4" stroke-linejoin="round"/>
+          <!-- 찰랑거리는 물약 액체 -->
+          <path d="M 28 55 C 28 85 36 87 50 87 C 64 87 72 85 72 55 C 72 47 28 47 28 55 Z" fill="${liquidColor}" class="liquid-anim" />
+          <!-- 병 눈금 장식 -->
+          <line x1="34" y1="52" x2="44" y2="52" stroke="#94A3B8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="32" y1="65" x2="47" y2="65" stroke="#94A3B8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="34" y1="78" x2="44" y2="78" stroke="#94A3B8" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- 광택 윤기 효과 -->
+          <path d="M 64 45 C 68 55 68 75 63 82" stroke="#FFFFFF" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.75"/>
+        </svg>
+      `
+    };
+
+    const symptoms = [
+      { id: 'head', name: '머리 아픔', color: 'bg-white', border: 'border-red-200', svg: illustrations.head },
+      { id: 'eye', name: '눈 아픔', color: 'bg-white', border: 'border-blue-200', svg: illustrations.eye },
+      { id: 'nose', name: '콧물 훌쩍', color: 'bg-white', border: 'border-orange-200', svg: illustrations.nose },
+      { id: 'cough', name: '콜록 기침', color: 'bg-white', border: 'border-yellow-200', svg: illustrations.cough },
+      { id: 'fever', name: '펄펄 열남', color: 'bg-white', border: 'border-amber-200', svg: illustrations.fever },
+      { id: 'leg', name: '다리 삐끗', color: 'bg-white', border: 'border-purple-200', svg: illustrations.leg },
+      { id: 'arm', name: '팔 아픔', color: 'bg-white', border: 'border-indigo-200', svg: illustrations.arm },
+      { id: 'stomach', name: '배탈 났어', color: 'bg-white', border: 'border-emerald-200', svg: illustrations.stomach }
+    ];
+
+    const colors = [
+      { id: 'white', name: '하얀 물약', color: 'bg-white', border: 'border-slate-300', hex: '#FFFFFF', svg: illustrations.potion('#F8FAFC') },
+      { id: 'black', name: '검은 물약', color: 'bg-white', border: 'border-gray-400', hex: '#1E293B', svg: illustrations.potion('#334155') },
+      { id: 'red', name: '빨간 물약', color: 'bg-white', border: 'border-rose-300', hex: '#EF4444', svg: illustrations.potion('#EF4444') },
+      { id: 'pink', name: '분홍 물약', color: 'bg-white', border: 'border-pink-300', hex: '#EC4899', svg: illustrations.potion('#F472B6') },
+      { id: 'orange', name: '주황 물약', color: 'bg-white', border: 'border-orange-300', hex: '#F97316', svg: illustrations.potion('#FB923C') },
+      { id: 'green', name: '초록 물약', color: 'bg-white', border: 'border-emerald-300', hex: '#10B981', svg: illustrations.potion('#34D399') },
+      { id: 'blue', name: '파란 물약', color: 'bg-white', border: 'border-sky-300', hex: '#0EA5E9', svg: illustrations.potion('#38BDF8') },
+      { id: 'yellow', name: '노란 물약', color: 'bg-white', border: 'border-yellow-300', hex: '#FBBF24', svg: illustrations.potion('#FCD34D') },
+      { id: 'custom', name: '요술 물약', color: 'bg-white', border: 'border-indigo-300', hex: 'custom', svg: illustrations.potion('url(#magicGradient)') }
+    ];
+
+    let activeTab = 'symptom';
+    let selectedItem = null;
+    let currentRole = null;
+    let previousOrderCount = 0;
+    let rtdbListener = null;
+
+    // 모달 전용 색상 변수 (기본 최대치: HSL 360, 100%)
+    let customHue = 360;
+    let customLight = 100;
+
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    window.addEventListener('touchstart', initAudio, { passive: true });
+    window.addEventListener('click', initAudio, { passive: true });
+    window.addEventListener('pointerdown', initAudio, { passive: true });
+
+    function playSound(type) {
+      initAudio();
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      const now = audioCtx.currentTime;
+
+      if (type === 'success') {
+        osc.type = 'sine';
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, index) => {
+          osc.frequency.setValueAtTime(freq, now + index * 0.08);
+        });
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.6, now + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+        osc.start(now);
+        osc.stop(now + 0.6);
+      } else if (type === 'notification') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880.00, now);
+        osc.frequency.setValueAtTime(698.46, now + 0.12);
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.7, now + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        osc.start(now);
+        osc.stop(now + 0.8);
+      } else if (type === 'pop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(450, now);
+        osc.frequency.exponentialRampToValueAtTime(1000, now + 0.06);
+        gainNode.gain.setValueAtTime(0.6, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+        osc.start(now);
+        osc.stop(now + 0.06);
+      }
+    }
+
+    window.startApp = (role) => {
+      initAudio();
+      playSound('pop');
+      currentRole = role;
+      document.getElementById('view-menu').classList.add('hidden');
+
+      if (role === 'customer') {
+        document.getElementById('view-customer').classList.remove('hidden');
+        document.getElementById('view-owner').classList.add('hidden');
+        switchTab('symptom');
+      } else if (role === 'owner') {
+        document.getElementById('view-owner').classList.remove('hidden');
+        document.getElementById('view-customer').classList.add('hidden');
+        startListeningToOrders();
+      }
+    };
+
+    window.goHome = () => {
+      playSound('pop');
+      document.getElementById('view-customer').classList.add('hidden');
+      document.getElementById('view-owner').classList.add('hidden');
+      document.getElementById('view-menu').classList.remove('hidden');
+      if (rtdbListener) {
+        rtdbListener();
+        rtdbListener = null;
+      }
+      resetSelection();
+      currentRole = null;
+    };
+
+    window.switchTab = (tab) => {
+      playSound('pop');
+      activeTab = tab;
+      
+      const btnSymptom = document.getElementById('tab-symptom');
+      const btnColor = document.getElementById('tab-color');
+
+      if (tab === 'symptom') {
+        btnSymptom.className = "flex-1 py-3 sm:py-4 text-2xl sm:text-3xl font-black rounded-2xl transition-all bg-white text-emerald-700 shadow-sm border border-emerald-200";
+        btnColor.className = "flex-1 py-3 sm:py-4 text-2xl sm:text-3xl font-black rounded-2xl transition-all bg-transparent text-emerald-600 hover:bg-white/50";
+      } else {
+        btnColor.className = "flex-1 py-3 sm:py-4 text-2xl sm:text-3xl font-black rounded-2xl transition-all bg-white text-emerald-700 shadow-sm border border-emerald-200";
+        btnSymptom.className = "flex-1 py-3 sm:py-4 text-2xl sm:text-3xl font-black rounded-2xl transition-all bg-transparent text-emerald-600 hover:bg-white/50";
+      }
+
+      renderSelectionView();
+    };
+
+    // --- 가로 정렬 카드 렌더링 (그림: 왼쪽 45%, 글씨: 오른쪽 55% 고정 구조) ---
+    function renderSelectionView() {
+      const grid = document.getElementById('selection-grid');
+      grid.innerHTML = '';
+
+      const items = (activeTab === 'symptom') ? symptoms : colors;
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        // 세련된 가로 정렬(flex-row) 방식으로 그림과 글씨 간의 절대 침범 금지 설계
+        card.className = `${item.color} border-4 ${item.border} rounded-[2rem] p-4 flex flex-row items-center justify-start shadow-md h-32 sm:h-40 w-full min-h-0 cursor-pointer transition-all gap-4 sm:gap-6`;
+        card.id = `card-${item.id}`;
+        card.onclick = () => selectItem(item);
+
+        if (selectedItem && selectedItem.id === item.id) {
+          card.classList.add('selected-card');
+        }
+
+        let svgCode = item.svg;
+        if (item.id === 'custom') {
+          svgCode = `
+            <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+              <defs>
+                <linearGradient id="magicGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FF007F" />
+                  <stop offset="50%" stop-color="#FFD700" />
+                  <stop offset="100%" stop-color="#00FFFF" />
+                </linearGradient>
+              </defs>
+              ${illustrations.potion('url(#magicGradient)')}
+            </svg>
+          `;
+          if (selectedItem && selectedItem.id === 'custom' && selectedItem.hex !== 'custom') {
+            svgCode = illustrations.potion(selectedItem.hex);
+          }
+        }
+
+        card.innerHTML = `
+          <!-- 이미지 홀더: 카드의 왼쪽 40% 고정 배분 -->
+          <div class="w-[40%] h-full max-w-[120px] flex-shrink-0 flex items-center justify-center select-none overflow-hidden p-1">
+            ${svgCode}
+          </div>
+          <!-- 텍스트 영역: 카드의 오른쪽 60% 배분 및 절대 잘리지 않게 완전 사전 노출 -->
+          <div class="flex-1 text-left select-none pr-2">
+            <span class="text-2xl sm:text-3xl md:text-4xl font-black text-gray-800 block leading-tight break-keep">
+              ${item.name}
+            </span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      if (currentRole === 'customer') {
+        renderSelectionView();
+      }
+    });
+
+    // --- 아이템 선택 제어 ---
+    function selectItem(item) {
+      playSound('pop');
+
+      if (item.id === 'custom') {
+        openCustomColorModal();
+        return;
+      }
+
+      selectedItem = {
+        id: item.id,
+        name: item.name,
+        type: (activeTab === 'symptom') ? 'symptom' : 'color',
+        hex: item.hex || '',
+        svg: item.svg
+      };
+
+      const textEl = document.getElementById('selected-text');
+      textEl.innerText = `${item.name}`;
+      if (item.hex) {
+        textEl.style.color = (item.hex === '#FFFFFF') ? '#888888' : item.hex;
+      } else {
+        textEl.style.color = '#10B981';
+      }
+
+      updateOrderButton();
+      
+      const grid = document.getElementById('selection-grid');
+      Array.from(grid.children).forEach(child => {
+        child.classList.remove('selected-card');
+      });
+      document.getElementById(`card-${item.id}`).classList.add('selected-card');
+    }
+
+    // --- 커스텀 인앱 슬라이더 모달 열기 ---
+    function openCustomColorModal() {
+      // 명도와 색조 기본값을 최대치(오른쪽 끝)로 강제 설정
+      customHue = 360;
+      customLight = 100;
+
+      document.getElementById('input-hue').value = customHue;
+      document.getElementById('input-light').value = customLight;
+
+      updateModalColor(); // 미리보기 초기 동기화
+
+      document.getElementById('color-picker-modal').classList.remove('hidden');
+    }
+
+    // 슬라이더 값이 변경될 때마다 물약통과 텍스트를 실시간으로 업데이트
+    window.updateModalColor = () => {
+      customHue = document.getElementById('input-hue').value;
+      customLight = document.getElementById('input-light').value;
+
+      document.getElementById('label-hue').innerText = customHue;
+      document.getElementById('label-light').innerText = `${customLight}%`;
+
+      // HSL 칼라로 미리보기 드로잉
+      const currentHsl = `hsl(${customHue}, 100%, ${customLight / 2 + 25}%)`; // 보정된 물약색 채움
+      const previewContainer = document.getElementById('modal-preview-bottle');
+      previewContainer.innerHTML = illustrations.potion(currentHsl);
+    };
+
+    // 요술 물약 결정
+    window.confirmCustomColor = () => {
+      playSound('pop');
+      const finalHsl = `hsl(${customHue}, 100%, ${customLight / 2 + 25}%)`;
+
+      selectedItem = {
+        id: 'custom',
+        name: `요술 물약`,
+        type: 'color',
+        hex: finalHsl,
+        svg: illustrations.potion(finalHsl)
+      };
+
+      const textEl = document.getElementById('selected-text');
+      textEl.innerText = selectedItem.name;
+      textEl.style.color = finalHsl;
+
+      document.getElementById('color-picker-modal').classList.add('hidden');
+      updateOrderButton();
+      renderSelectionView(); // 즉시 리렌더링해서 요술 물약병 색깔 반영
+    };
+
+    function updateOrderButton() {
+      const btn = document.getElementById('btn-order');
+      if (selectedItem) {
+        btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400', 'border-gray-600');
+        btn.classList.add('bg-emerald-500', 'border-emerald-700');
+        btn.disabled = false;
+      } else {
+        btn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400', 'border-gray-600');
+        btn.classList.remove('bg-emerald-500', 'border-emerald-700');
+        btn.disabled = true;
+      }
+    }
+
+    function resetSelection() {
+      selectedItem = null;
+      const textEl = document.getElementById('selected-text');
+      textEl.innerText = "아직 없어요";
+      textEl.style.color = '#10B981';
+      renderSelectionView();
+      updateOrderButton();
+    }
+
+    window.submitOrder = async () => {
+      if (!selectedItem) return;
+
+      const currentSelection = { ...selectedItem };
+
+      resetSelection();
+
+      playSound('success');
+      const toast = document.getElementById('toast-message');
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 1800);
+
+      try {
+        const dbRef = ref(db, DB_ORDERS_PATH);
+        await push(dbRef, {
+          patientChoice: {
+            id: currentSelection.id,
+            name: currentSelection.name,
+            type: currentSelection.type,
+            hex: currentSelection.hex
+          },
+          createdAt: serverTimestamp()
+        });
+      } catch (error) {
+        console.error("약국 데이터 전송 오류:", error);
+      }
+    };
+
+    // --- 약사(Owner)용 실시간 데이터 연동 ---
+    function startListeningToOrders() {
+      const dbRef = ref(db, DB_ORDERS_PATH);
+      
+      rtdbListener = onValue(dbRef, (snapshot) => {
+        const orders = [];
+        const data = snapshot.val();
+        
+        if (data) {
+          Object.keys(data).forEach((key) => {
+            orders.push({ id: key, ...data[key] });
+          });
+          
+          orders.sort((a, b) => {
+            const timeA = a.createdAt ? a.createdAt : Date.now();
+            const timeB = b.createdAt ? b.createdAt : Date.now();
+            return timeA - timeB;
+          });
+        }
+
+        renderOwnerView(orders);
+
+        if (orders.length > previousOrderCount) {
+          if (previousOrderCount !== 0) {
+            playSound('notification');
+            document.body.classList.add('flash-bg');
+            setTimeout(() => document.body.classList.remove('flash-bg'), 2400);
+          }
+        }
+        previousOrderCount = orders.length;
+      }, (error) => {
+        console.error("약국 실시간 신호 에러:", error);
+      });
+    }
+
+    function renderOwnerView(orders) {
+      const listContainer = document.getElementById('order-list');
+      const emptyState = document.getElementById('empty-orders');
+      document.getElementById('order-count-badge').innerText = orders.length;
+
+      Array.from(listContainer.children).forEach(child => {
+        if (child.id !== 'empty-orders') listContainer.removeChild(child);
+      });
+
+      if (orders.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        
+        orders.forEach((order, index) => {
+          const card = document.createElement('div');
+          card.className = "bg-white p-5 sm:p-6 rounded-[2rem] shadow-lg border-4 border-blue-200 flex flex-col md:flex-row justify-between items-center gap-6 pop-in";
+          card.style.animationDelay = `${index * 0.1}s`;
+          
+          const choice = order.patientChoice;
+          
+          let targetSvg = '';
+          if (choice.type === 'symptom') {
+            targetSvg = symptoms.find(s => s.id === choice.id)?.svg || '';
+          } else {
+            if (choice.id === 'custom') {
+              targetSvg = illustrations.potion(choice.hex);
+            } else {
+              targetSvg = colors.find(c => c.id === choice.id)?.svg || '';
+            }
+          }
+
+          let typeLabel = choice.type === 'symptom' ? '🤕 증상 호소' : '🧪 물약 희망';
+          let typeClass = choice.type === 'symptom' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700';
+
+          card.innerHTML = `
+            <div class="flex-1 w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div class="text-blue-500 font-bold mb-3 flex items-center gap-2">
+                  <span class="bg-blue-100 px-3.5 py-1.5 rounded-xl text-lg sm:text-xl font-black whitespace-nowrap">환자 대기번호 ${index + 1}</span>
+                  <span class="px-3.5 py-1.5 rounded-xl text-lg sm:text-xl font-bold ${typeClass} whitespace-nowrap">${typeLabel}</span>
+                </div>
+                <div class="flex items-center gap-4 bg-emerald-50 px-5 py-3 rounded-2xl border border-emerald-100 font-bold max-w-lg">
+                  <div class="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 flex items-center justify-center">
+                    ${targetSvg}
+                  </div>
+                  <span class="text-gray-700 text-2xl sm:text-3xl font-extrabold whitespace-nowrap">${choice.name}</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="completeOrder('${order.id}')" class="btn-press shrink-0 bg-blue-500 hover:bg-blue-600 text-white text-xl sm:text-2xl md:text-3xl font-bold py-6 sm:py-8 px-10 sm:px-12 rounded-[2rem] shadow-xl border-b-8 border-blue-700 w-full md:w-auto transition-all whitespace-nowrap">
+              물약 처방 완료 💊
+            </button>
+          `;
+          listContainer.appendChild(card);
+        });
+      }
+    }
+
+    window.completeOrder = async (orderId) => {
+      playSound('pop');
+      try {
+        const orderRef = ref(db, `${DB_ORDERS_PATH}/${orderId}`);
+        await remove(orderRef);
+      } catch (error) {
+        console.error("처방 완료 처리 오류:", error);
+      }
+    };
+
+  </script>
+</body>
+</html>
