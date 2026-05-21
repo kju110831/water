@@ -367,6 +367,7 @@
     let selectedItem = null;
     let currentRole = null;
     let previousOrderCount = 0;
+    let isInitialLoad = true;
     let rtdbListener = null;
 
     // 모달 전용 색상 변수 (기본 최대치: HSL 360, 100%)
@@ -442,6 +443,7 @@
       } else if (role === 'owner') {
         document.getElementById('view-owner').classList.remove('hidden');
         document.getElementById('view-customer').classList.add('hidden');
+        isInitialLoad = true;
         startListeningToOrders();
       }
     };
@@ -695,13 +697,14 @@
         renderOwnerView(orders);
 
         if (orders.length > previousOrderCount) {
-          if (previousOrderCount !== 0) {
+          if (!isInitialLoad && orders.length > previousOrderCount) {
             playSound('notification');
             document.body.classList.add('flash-bg');
             setTimeout(() => document.body.classList.remove('flash-bg'), 2400);
           }
         }
         previousOrderCount = orders.length;
+        isInitialLoad = false;
       }, (error) => {
         console.error("약국 실시간 신호 에러:", error);
       });
